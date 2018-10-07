@@ -35,7 +35,7 @@ libraryDependencies += "com.tersesystems.securitybuilder" % "securitybuilder" % 
 
 ### KeyManagerBuilder
 
-Builds a `KeyManager` from input.  If you use `withNewSunX509()`, then you get a `X509ExtendedKeyManager` that is the default.
+Builds a [`KeyManager`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#KeyManagerFactory) from input.  If you use `withNewSunX509()`, then you get a `X509ExtendedKeyManager` that is the default.
 
 ```java
 public class KeyManagerBuilderTest {
@@ -59,7 +59,7 @@ public class KeyManagerBuilderTest {
 
 ### TrustManagerBuilder
 
-Builds a `TrustManager` from input.
+Builds a [`TrustManager`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#TrustManagerFactory) from input.
 
 ```java
 public class TrustManagerBuilderTest {
@@ -69,155 +69,6 @@ public class TrustManagerBuilderTest {
     final X509ExtendedTrustManager trustManager =
         TrustManagerBuilder.builder().withDefaultAlgorithm().withKeyStore(keyStore).build();
     assertThat(trustManager.getAcceptedIssuers()).isEmpty();
-  }
-}
-```
-
-### KeyPairBuilder
-
-Builds a `KeyPair`.  If you use `withRSA`, `withDSA` or `withEC` then you get back a typesafe `KeyPair`.
-
-```java
-class KeyPairBuilderTest {
-  @Test
-  void testWithAlgorithm() throws GeneralSecurityException {
-    final KeyPair keyPair = KeyPairBuilder.builder().withAlgorithm("RSA").withKeySize(2048).build();
-    Assertions.assertThat(keyPair.getPublic().getAlgorithm()).isEqualTo("RSA");
-  }
-
-  @Test
-  void testWithRSA() throws GeneralSecurityException {
-    final RSAKeyPair keyPair = KeyPairBuilder.builder().withRSA().withKeySize(2048).build();
-    Assertions.assertThat(keyPair.getPublic().getAlgorithm()).isEqualTo("RSA");
-  }
-
-  @Test
-  void testWithDSA() throws GeneralSecurityException {
-    final DSAKeyPair keyPair = KeyPairBuilder.builder().withDSA().withKeySize(1024).build();
-    Assertions.assertThat(keyPair.getPublic().getAlgorithm()).isEqualTo("DSA");
-  }
-
-  @Test
-  void testWithEC() throws GeneralSecurityException {
-    final ECKeyPair keyPair = KeyPairBuilder.builder().withEC().withKeySize(224).build();
-    Assertions.assertThat(keyPair.getPublic().getAlgorithm()).isEqualTo("EC");
-  }
-}
-```
-
-### KeyStoreBuilder
-
-Builds a `KeyStore`.
-
-```java
-public class KeyStoreBuilderTest {
-
-  @Test
-  public void testKeyStoreBuilderWithPathAndNoPassword() {
-    try {
-      final Path tempPath = Files.createTempFile(null, null);
-      final KeyStore keyStore = KeyStoreBuilder.empty();
-      keyStore.store(new FileOutputStream(tempPath.toFile()), "".toCharArray());
-
-      final KeyStore keyStoreFromPath =
-          KeyStoreBuilder.builder().withDefaultType().withPath(tempPath).withNoPassword().build();
-      assertThat(keyStoreFromPath.getType()).isEqualTo(KeyStore.getDefaultType());
-    } catch (final Exception e) {
-      fail(e.getMessage(), e);
-    }
-  }
-}
-```
-
-### PKCS8EncodedKeySpecBuilder
-
-Builds a `PKCS8EncodedKeySpec`, commonly used for PEM encoded private keys.
-
-```java
-class PKCS8EncodedKeySpecBuilderTest {
-  @Test
-  public void testGeneration() throws Exception {
-    // Read a private key
-    final Reader reader = new InputStreamReader(getClass().getResourceAsStream("/private-key.pem"));
-    final PKCS8EncodedKeySpec keySpec =
-        PKCS8EncodedKeySpecBuilder.builder().withReader(reader).withNoPassword().build();
-    assertThat(keySpec.getFormat()).isEqualTo("PKCS#8");
-  }
-}
-```
-
-### PrivateKeyBuilder
-
-Builds a `PrivateKey`.  Will provide private key of the appropriate type using `withRSA`, `withDSA`, or `withEC` methods.
-
-```java
-
-class PrivateKeyBuilderTest {
-
-  @Test
-  void builderWithRSA() throws GeneralSecurityException {
-    final RSAPrivateKey exampleKey =
-        (RSAPrivateKey)
-            KeyPairBuilder.builder().withAlgorithm("RSA").withKeySize(2048).build().getPrivate();
-    final RSAPrivateKeySpec rsaPrivateKeySpec =
-        new RSAPrivateKeySpec(exampleKey.getModulus(), exampleKey.getPrivateExponent());
-    final RSAPrivateKey privateKey =
-        PrivateKeyBuilder.builder().withRSA().withKeySpec(rsaPrivateKeySpec).build();
-
-    assertThat(privateKey).isNotNull();
-  }
-}
-```
-
-### PublicKeyBuilder
-
-Builds a `PublicKey`.  Will provide public key of the appropriate type using `withRSA`, `withDSA`, or `withEC` methods.
-
-```java
-public class PublicKeyBuilderTest {
-
-  @Test
-  public void testRSAPublicKey() throws GeneralSecurityException {
-    final BigInteger modulus =
-        new BigInteger(
-            "b4a7e46170574f16a97082b22be58b6a2a629798419"
-                + "be12872a4bdba626cfae9900f76abfb12139dce5de5"
-                + "6564fab2b6543165a040c606887420e33d91ed7ed7",
-            16);
-    final BigInteger exp = new BigInteger("11", 16);
-    final RSAPublicKeySpec rsaPublicKeySpec = new RSAPublicKeySpec(modulus, exp);
-    RSAPublicKey rsaPublicKey =
-        PublicKeyBuilder.builder().withRSA().withKeySpec(rsaPublicKeySpec).build();
-    assertThat(rsaPublicKey).isNotNull();
-  }
-}
-```
-
-### SignatureBuilder
-
-Builds a [`Signature`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#Signature). for either signing or verifying. 
-
-```java
-public class SignatureBuilderTest {
-
-  @Test
-  public void testSignature() {
-    try {
-      final KeyPair<?, ?> keyPair =
-          KeyPairBuilder.builder().withAlgorithm("RSA").withKeySize(2048).build();
-      final PrivateKey privateKey = keyPair.getPrivate();
-      final PublicKey publicKey = keyPair.getPublic();
-
-      final Signature signingSignature =
-          SignatureBuilder.builder().withAlgorithm("SHA256withRSA").signing(privateKey).build();
-      final byte[] digest = signingSignature.sign();
-
-      final Signature verifySignature =
-          SignatureBuilder.builder().withAlgorithm("SHA256withRSA").verifying(publicKey).build();
-      assertThat(verifySignature.verify(digest)).isEqualTo(true);
-    } catch (final Exception e) {
-      Fail.fail(e.getMessage(), e);
-    }
   }
 }
 ```
@@ -255,9 +106,165 @@ public class SSLContextBuilderTest {
 }
 ```
 
+### KeyPairBuilder
+
+Builds a [`KeyPair`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyPair) using a [`KeyPairGenerator`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyPairGenerator).  If you use `withRSA`, `withDSA` or `withEC` then you get back a typesafe `KeyPair`.
+
+```java
+class KeyPairBuilderTest {
+  @Test
+  void testWithAlgorithm() throws GeneralSecurityException {
+    final KeyPair keyPair = KeyPairBuilder.builder().withAlgorithm("RSA").withKeySize(2048).build();
+    Assertions.assertThat(keyPair.getPublic().getAlgorithm()).isEqualTo("RSA");
+  }
+
+  @Test
+  void testWithRSA() throws GeneralSecurityException {
+    final RSAKeyPair keyPair = KeyPairBuilder.builder().withRSA().withKeySize(2048).build();
+    Assertions.assertThat(keyPair.getPublic().getAlgorithm()).isEqualTo("RSA");
+  }
+
+  @Test
+  void testWithDSA() throws GeneralSecurityException {
+    final DSAKeyPair keyPair = KeyPairBuilder.builder().withDSA().withKeySize(1024).build();
+    Assertions.assertThat(keyPair.getPublic().getAlgorithm()).isEqualTo("DSA");
+  }
+
+  @Test
+  void testWithEC() throws GeneralSecurityException {
+    final ECKeyPair keyPair = KeyPairBuilder.builder().withEC().withKeySize(224).build();
+    Assertions.assertThat(keyPair.getPublic().getAlgorithm()).isEqualTo("EC");
+  }
+}
+```
+
+### KeyStoreBuilder
+
+Builds a [`KeyStore`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyStore).
+
+```java
+public class KeyStoreBuilderTest {
+
+  @Test
+  public void testKeyStoreBuilderWithPathAndNoPassword() {
+    try {
+      final Path tempPath = Files.createTempFile(null, null);
+      final KeyStore keyStore = KeyStoreBuilder.empty();
+      keyStore.store(new FileOutputStream(tempPath.toFile()), "".toCharArray());
+
+      final KeyStore keyStoreFromPath =
+          KeyStoreBuilder.builder().withDefaultType().withPath(tempPath).withNoPassword().build();
+      assertThat(keyStoreFromPath.getType()).isEqualTo(KeyStore.getDefaultType());
+    } catch (final Exception e) {
+      fail(e.getMessage(), e);
+    }
+  }
+}
+```
+
+### PKCS8EncodedKeySpecBuilder
+
+Builds a [`PKCS8EncodedKeySpec`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#PKCS8EncodedKeySpec), commonly used for PEM encoded private keys.
+
+```java
+class PKCS8EncodedKeySpecBuilderTest {
+  @Test
+  public void testGeneration() throws Exception {
+    // Read a private key
+    final Reader reader = new InputStreamReader(getClass().getResourceAsStream("/private-key.pem"));
+    final PKCS8EncodedKeySpec keySpec =
+        PKCS8EncodedKeySpecBuilder.builder().withReader(reader).withNoPassword().build();
+    assertThat(keySpec.getFormat()).isEqualTo("PKCS#8");
+  }
+}
+```
+
+### PrivateKeyBuilder
+
+Builds a [`PrivateKey`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyFactory).  Will provide private key of the appropriate type using `withRSA`, `withDSA`, or `withEC` methods.
+
+```java
+
+class PrivateKeyBuilderTest {
+
+  @Test
+  void builderWithRSA() throws GeneralSecurityException {
+    final RSAPrivateKey exampleKey =
+        (RSAPrivateKey)
+            KeyPairBuilder.builder().withAlgorithm("RSA").withKeySize(2048).build().getPrivate();
+    final RSAPrivateKeySpec rsaPrivateKeySpec =
+        new RSAPrivateKeySpec(exampleKey.getModulus(), exampleKey.getPrivateExponent());
+    final RSAPrivateKey privateKey =
+        PrivateKeyBuilder.builder().withRSA().withKeySpec(rsaPrivateKeySpec).build();
+
+    assertThat(privateKey).isNotNull();
+  }
+}
+```
+
+### PublicKeyBuilder
+
+Builds a [`PublicKey`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyFactory).  Will provide public key of the appropriate type using `withRSA`, `withDSA`, or `withEC` methods.
+
+```java
+public class PublicKeyBuilderTest {
+
+  @Test
+  public void testRSAPublicKey() throws GeneralSecurityException {
+    final BigInteger modulus =
+        new BigInteger(
+            "b4a7e46170574f16a97082b22be58b6a2a629798419"
+                + "be12872a4bdba626cfae9900f76abfb12139dce5de5"
+                + "6564fab2b6543165a040c606887420e33d91ed7ed7",
+            16);
+    final BigInteger exp = new BigInteger("11", 16);
+    final RSAPublicKeySpec rsaPublicKeySpec = new RSAPublicKeySpec(modulus, exp);
+    RSAPublicKey rsaPublicKey =
+        PublicKeyBuilder.builder().withRSA().withKeySpec(rsaPublicKeySpec).build();
+    assertThat(rsaPublicKey).isNotNull();
+  }
+}
+```
+
+### SecretKeyBuilder
+
+Builds a [`SecretKey`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#SecretKeyFactory)
+
+TODO
+
+### SignatureBuilder
+
+Builds a [`Signature`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#Signature). for either signing or verifying. 
+
+```java
+public class SignatureBuilderTest {
+
+  @Test
+  public void testSignature() {
+    try {
+      final KeyPair<?, ?> keyPair =
+          KeyPairBuilder.builder().withAlgorithm("RSA").withKeySize(2048).build();
+      final PrivateKey privateKey = keyPair.getPrivate();
+      final PublicKey publicKey = keyPair.getPublic();
+
+      final Signature signingSignature =
+          SignatureBuilder.builder().withAlgorithm("SHA256withRSA").signing(privateKey).build();
+      final byte[] digest = signingSignature.sign();
+
+      final Signature verifySignature =
+          SignatureBuilder.builder().withAlgorithm("SHA256withRSA").verifying(publicKey).build();
+      assertThat(verifySignature.verify(digest)).isEqualTo(true);
+    } catch (final Exception e) {
+      Fail.fail(e.getMessage(), e);
+    }
+  }
+}
+```
+
+
 ### CertificateBuilder
 
-`CertificateBuilder` will create an instance of `java.security.Certificate` from a source.  If you use `withX509()`, it will give you an `X509Certificate`.
+Builds a `java.security.Certificate` from a source.  If you use `withX509()`, it will give you an `X509Certificate`.
 
 ```java
 public class CertificateBuilderTest {
