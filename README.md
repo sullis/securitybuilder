@@ -43,6 +43,8 @@ libraryDependencies += "com.tersesystems.securitybuilder" % "securitybuilder" % 
 
 Builds a [`KeyManager`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#KeyManagerFactory) from input.  If you use `withNewSunX509()`, then you get a `X509ExtendedKeyManager` that is the default.
 
+Recommend using with [debugjsse](https://github.com/tersesystems/debugjsse) provider.
+
 ```java
 public class KeyManagerBuilderTest {
 
@@ -67,6 +69,8 @@ public class KeyManagerBuilderTest {
 
 Builds a [`TrustManager`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#TrustManagerFactory) from input.
 
+Recommend using with [debugjsse](https://github.com/tersesystems/debugjsse) provider.
+
 ```java
 public class TrustManagerBuilderTest {
   @Test
@@ -81,7 +85,9 @@ public class TrustManagerBuilderTest {
 
 ### SSLContextBuilder
 
-Build a [`SSLContext`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#SSLContext)
+Build a [`SSLContext`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#SSLContext).  
+
+You will typically want to combine this with `TrustManagerBuilder` and `KeyManagerBuilder`.
 
 ```java
 public class SSLContextBuilderTest {
@@ -114,7 +120,9 @@ public class SSLContextBuilderTest {
 
 ### KeyPairBuilder
 
-Builds a [`KeyPair`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyPair) using a [`KeyPairGenerator`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyPairGenerator).  If you use `withRSA`, `withDSA` or `withEC` then you get back a typesafe `KeyPair`.
+Builds a [`KeyPair`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyPair) using a [`KeyPairGenerator`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyPairGenerator). 
+ 
+If you use `withRSA`, `withDSA` or `withEC` then you get back `RSAKeyPair` etc.
 
 ```java
 class KeyPairBuilderTest {
@@ -156,7 +164,9 @@ public class KeyStoreBuilderTest {
     try {
       final Path tempPath = Files.createTempFile(null, null);
       final KeyStore keyStore = KeyStoreBuilder.empty();
-      keyStore.store(new FileOutputStream(tempPath.toFile()), "".toCharArray());
+      try (OutputStream outputStream = Files.newOutputStream(tempPath)) {
+        keyStore.store(outputStream, "".toCharArray());
+      }
 
       final KeyStore keyStoreFromPath =
           KeyStoreBuilder.builder().withDefaultType().withPath(tempPath).withNoPassword().build();
@@ -187,10 +197,11 @@ class PKCS8EncodedKeySpecBuilderTest {
 
 ### PrivateKeyBuilder
 
-Builds a [`PrivateKey`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyFactory).  Will provide private key of the appropriate type using `withRSA`, `withDSA`, or `withEC` methods.
+Builds a [`PrivateKey`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyFactory).  
+
+Will provide private key of the appropriate type using `withRSA`, `withDSA`, or `withEC` methods.
 
 ```java
-
 class PrivateKeyBuilderTest {
 
   @Test
@@ -210,7 +221,9 @@ class PrivateKeyBuilderTest {
 
 ### PublicKeyBuilder
 
-Builds a [`PublicKey`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyFactory).  Will provide public key of the appropriate type using `withRSA`, `withDSA`, or `withEC` methods.
+Builds a [`PublicKey`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#KeyFactory). 
+ 
+Will provide public key of the appropriate type using `withRSA`, `withDSA`, or `withEC` methods.
 
 ```java
 public class PublicKeyBuilderTest {
@@ -301,7 +314,9 @@ public class SignatureBuilderTest {
 
 ### CertificateBuilder
 
-Builds a `java.security.Certificate` from a source.  If you use `withX509()`, it will give you an `X509Certificate`.
+Builds a `java.security.Certificate` from a source.  
+
+If you use `withX509()`, it will give you an `X509Certificate`.
 
 ```java
 public class CertificateBuilderTest {
@@ -324,7 +339,9 @@ public class CertificateBuilderTest {
 
 ### X509CertificateBuilder
 
-Creates an X509Certificate or a chain of X509Certificate.  Very useful for building up certificates.
+Creates an X509Certificate or a chain of X509Certificate.  
+
+Very useful for building up certificates if you use `chain()`.
 
 ```java
 public class X509CertificateBuilderTest {
@@ -373,7 +390,7 @@ public class X509CertificateBuilderTest {
 
 ### KeyStores
 
-The `java.security.KeyStore` has three wrappers, depending on purpose: `PrivateKeyStore`, `TrustStore`, and `SecretKeyStore`.  They all extend `AbstractKeyStore`, and are written to be a drop in for `java.util.Map`.
+The `java.security.KeyStore` has three wrappers, depending on purpose: `PrivateKeyStore`, `TrustStore`, and `SecretKeyStore`.  They all extend `AbstractKeyStore`, and are written to be a drop in for `java.util.Map`.  See [blog post](https://tersesystems.com/blog/2018/07/28/building-java-keystores/) for gory details.
 
 #### PrivateKeyStore
 
@@ -408,7 +425,6 @@ public class PrivateKeyStoreTest {
       fail(e.getMessage());
     }
   }
-
 }
 ```
 
@@ -454,7 +470,9 @@ public class TrustStoreTest {
 
 #### SecretKeyStore
 
-A `KeyStore` that contains only `SecretKeyEntry`.
+A `KeyStore` that contains only `SecretKeyEntry`.  
+
+Use this with a KeyStore format of type PKCS12 or JCEKS.
 
 ```java
 public class SecretKeyStoreTest {
@@ -470,11 +488,10 @@ public class SecretKeyStoreTest {
       final int keySize = 256;
       final byte[] saltBytes = {0, 1, 2, 3, 4, 5, 6};
   
-      final SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-  
       final PBEKeySpec spec =
           new PBEKeySpec(password.toCharArray(), saltBytes, pswdIterations, keySize);
-      secretKeyStore.put("alias", new SecretKeyEntry(factory.generateSecret(spec)));
+      final SecretKey secretKey = SecretKeyBuilder.withAlgorithm("PBKDF2WithHmacSHA1").withKeySpec(spec).build();
+      secretKeyStore.put("alias", new SecretKeyEntry(secretKey));
   
       assertThat(secretKeyStore.size()).isEqualTo(1);
     } catch (final KeyStoreException
@@ -488,14 +505,17 @@ public class SecretKeyStoreTest {
 }
 ```
 
+### KeyStoreDefaults
+
+Allows access to the default `KeyStore` used for CA certificates and for the [private key store location](https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#CustomizingStores).
+
 ### KeyManagerKeyStoreBuilder
 
 Builds a `KeyStore.Builder`, using a keystore builder that is able to send different passwords to the "NewSunX509" keymanager.  
 
-**The out of the box `KeyStore.Builder` API does not do this!**
+**The out of the box `KeyStore.Builder` API does not do this!**  See [blog post](https://tersesystems.com/blog/2018/09/08/keymanagers-and-keystores/) for details.
 
 ```java
-
 public class DifferentPasswordsTest {
 
   @Test
