@@ -28,7 +28,7 @@ This library implements a set of "fluent" API builders for the `java.security` c
 
 ```scala
 resolvers += Resolver.jcenterRepo 
-libraryDependencies += "com.tersesystems.securitybuilder" % "securitybuilder" % "0.5.0"
+libraryDependencies += "com.tersesystems.securitybuilder" % "securitybuilder" % "0.1.0"
 ```
 
 ## Usage
@@ -230,7 +230,38 @@ public class PublicKeyBuilderTest {
 
 Builds a [`SecretKey`](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#SecretKeyFactory)
 
-TODO
+The SecretKeyFactory algorithms are in <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/security/SunProviders.html#SunJCEProvider">The SunJCE Provider</a>
+
+Uses an algorithm for SecretKeySpec.  These are based off the Cipher algorithm name, and most of them are in <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/security/SunProviders.html#OracleUcrypto">The OracleUcrypto Provider</a>, i.e. "AES".
+
+```java
+public class SecretKeyBuilderTest {
+  @Test
+  public void testAlgorithm() throws Exception {
+    String password = "changeit";
+    String salt = "abc123";
+    KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 128);
+    SecretKey secretKey = SecretKeyBuilder.builder()
+        .withAlgorithm("PBKDF2WithHmacSHA1")
+        .withKeySpec(keySpec)
+        .build();
+
+    assertThat(secretKey.getAlgorithm()).isEqualTo("PBKDF2WithHmacSHA1");
+  }
+
+  @Test
+  public void testSecretKeySpec() throws Exception {
+    byte[] aesKeyData = getKeyData();
+
+    SecretKey secretKey = SecretKeyBuilder.builder()
+        .withSecretKeySpec("AES")
+        .withData(aesKeyData)
+        .build();
+
+    assertThat(secretKey.getAlgorithm()).isEqualTo("AES");
+  }
+}
+```
 
 ### SignatureBuilder
 
