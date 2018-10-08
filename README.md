@@ -14,6 +14,46 @@ Use [Google Tink](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md)
 
 ### Maven
 
+From Bintray:
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<settings xsi:schemaLocation='http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd'
+          xmlns='http://maven.apache.org/SETTINGS/1.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+    
+    <profiles>
+        <profile>
+            <repositories>
+                <repository>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                    <id>bintray-tersesystems-maven</id>
+                    <name>bintray</name>
+                    <url>https://dl.bintray.com/tersesystems/maven</url>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                    <id>bintray-tersesystems-maven</id>
+                    <name>bintray-plugins</name>
+                    <url>https://dl.bintray.com/tersesystems/maven</url>
+                </pluginRepository>
+            </pluginRepositories>
+            <id>bintray</id>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <activeProfile>bintray</activeProfile>
+    </activeProfiles>
+</settings>
+```
+
+In your pom.xml:
+
 ```xml
 <repositories>
   <repository>
@@ -551,4 +591,13 @@ public class DifferentPasswordsTest {
 
 ```bash
 mvn clean compile test package
+```
+
+## Releasing
+
+Uses [Maven Release Plugin](http://maven.apache.org/maven-release/maven-release-plugin/plugin-info.html):
+
+```
+mvn release:prepare
+mvn release:perform
 ```
