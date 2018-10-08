@@ -6,7 +6,9 @@ This library implements a set of "fluent" API builders for the `java.security` c
 
 ## WARNING
 
-> If you need a cryptography API, **DON'T USE THE JCA!**  Even with these builders, building your own crypto using a low level library is like [juggling chainsaws in the dark](https://www.usenix.org/sites/default/files/conference/protected-files/hotsec15_slides_green.pdf).  Use a high level cryptography library like [Google Tink](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md) or [Kalium](https://github.com/abstractj/kalium/).   
+If you need a cryptography API, **DON'T USE THE JCA!**  Even with these builders, building your own crypto using a low level library is like [juggling chainsaws in the dark](https://www.usenix.org/sites/default/files/conference/protected-files/hotsec15_slides_green.pdf).  
+
+Use [Google Tink](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md) instead, which has support for [storing keysets](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md#storing-keysets), [symmetric key encryption](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md#symmetric-key-encryption), [digital signatures](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md#digitial-signatures), [envelope encryption](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md#envelope-encryption) and [key rotation](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md#key-rotation). 
 
 ## Installation
 
