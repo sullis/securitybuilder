@@ -2,7 +2,11 @@
 
 The [Java Cryptography Architecture](https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html) lays out how to create and initialize certificates, keystores, and so on, but typically does so in frustrating ways.  
 
-This library implements a set of "fluent" API builders for the `java.security` classes, and provides more typesafe, intuitive API to access trust stores, key stores and keys.
+This library implements a set of "fluent" API builders for the `java.security` classes, and provides more typesafe, intuitive API to access trust stores, key stores and keys.  The primary purpose of this library is to make small tasks easy, and provide better integration with the JSSE stack.
+
+## WARNING
+
+> If you need a cryptography API, **DON'T USE THE JCA!**  Even with these builders, building your own crypto using a low level library is like [juggling chainsaws in the dark](https://www.usenix.org/sites/default/files/conference/protected-files/hotsec15_slides_green.pdf).  Use a high level cryptography library like [Google Tink](https://github.com/google/tink/blob/master/docs/JAVA-HOWTO.md) or [Kalium](https://github.com/abstractj/kalium/).   
 
 ## Installation
 
