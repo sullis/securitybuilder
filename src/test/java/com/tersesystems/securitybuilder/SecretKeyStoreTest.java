@@ -55,6 +55,17 @@ public class SecretKeyStoreTest {
       final Map<String, ProtectionParameter> passwordMap =
           Collections.singletonMap("alias", new PasswordProtection(password.toCharArray()));
       final SecretKeyStore secretKeyStore = generateSecretKeyStore(passwordMap);
+
+      final int pswdIterations = 65536;
+      final int keySize = 256;
+      final byte[] saltBytes = {0, 1, 2, 3, 4, 5, 6};
+
+      final SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+
+      final PBEKeySpec spec =
+          new PBEKeySpec(password.toCharArray(), saltBytes, pswdIterations, keySize);
+      secretKeyStore.put("alias", new SecretKeyEntry(factory.generateSecret(spec)));
+
       assertThat(secretKeyStore.get("alias")).isExactlyInstanceOf(SecretKeyEntry.class);
     } catch (final KeyStoreException
         | IOException
